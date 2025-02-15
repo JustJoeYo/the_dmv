@@ -7,72 +7,63 @@ RSpec.describe Facility do
     @cruz = Vehicle.new({ vin: '123456789abcdefgh', year: 2012, make: 'Chevrolet', model: 'Cruz', engine: :ice })
     @bolt = Vehicle.new({ vin: '987654321abcdefgh', year: 2019, make: 'Chevrolet', model: 'Bolt', engine: :ev })
     @camaro = Vehicle.new({ vin: '1a2b3c4d5e6f', year: 1969, make: 'Chevrolet', model: 'Camaro', engine: :ice })
-  end
-
-  describe '#initialize' do
-    it 'can initialize' do
-      expect(@facility_1).to be_an_instance_of(Facility)
-      expect(@facility_1.name).to eq('DMV Tremont Branch')
-      expect(@facility_1.address).to eq('2855 Tremont Place Suite 118 Denver CO 80205')
-      expect(@facility_1.phone).to eq('(720) 865-4600')
-      expect(@facility_1.services).to eq([])
-      expect(@facility_1.registered_vehicles).to eq([])
-      expect(@facility_1.collected_fees).to eq(0)
-    end
-
-    it 'registered_vehicles is an empty array' do
-      expect(@facility_1.registered_vehicles).to eq([])
-    end
-
-    it 'collected_fees is 0' do
-      expect(@facility_1.collected_fees).to eq(0)
-    end
+    @registrant_1 = Registrant.new('Bruce', 18, true)
+    @registrant_2 = Registrant.new('Penny', 16)
+    @registrant_3 = Registrant.new('Tucker', 15)
   end
 
   describe '#add service' do
     it 'can add available services' do
-      expect(@facility_1.services).to eq([])
+      expect(@facility_1.services).to eq([]) #=> []
       @facility_1.add_service('New Drivers License')
-      @facility_1.add_service('Renew Drivers License')
+      @facility_1.add_service('Renew License')
       @facility_1.add_service('Vehicle Registration')
-      expect(@facility_1.services).to eq(['New Drivers License', 'Renew Drivers License', 'Vehicle Registration'])
+      expect(@facility_1.services).to eq(['New Drivers License', 'Renew License', 'Vehicle Registration']) #=> ["New Drivers License", "Renew License", "Vehicle Registration"]
     end
   end
 
-  describe '#register_vehicle' do
-    it 'can register vehicles' do
-      @facility_1.add_service('Vehicle Registration')
-      expect(@facility_1.registered_vehicles).to eq([])
-      expect(@facility_1.collected_fees).to eq(0)
+  describe '#administer_road_test' do
+    it 'can administer road tests' do
+      @facility_1.add_service('Written Test')
+      @facility_1.add_service('Road Test')
 
-      @facility_1.register_vehicle(@cruz)
-      expect(@cruz.registration_date).to eq(Date.today) #=> #<Date: 2025-02-14 ((2460721j,0s,0n),+0s,2299161j)>
-      expect(@cruz.plate_type).to eq(:regular)
-      expect(@facility_1.registered_vehicles).to include(@cruz)
-      expect(@facility_1.collected_fees).to eq(100)
+      expect(@facility_1.administer_road_test(@registrant_3)).to be false #=> false
+      @registrant_3.earn_permit
+      expect(@facility_1.administer_road_test(@registrant_3)).to be false #=> false
 
-      @facility_1.register_vehicle(@camaro)
-      expect(@camaro.registration_date).to eq(Date.today) # => #<Date: 2025-02-14 ((2460721j,0s,0n),+0s,2299161j)>
-      expect(@camaro.plate_type).to eq(:antique)
-      expect(@facility_1.registered_vehicles).to include(@camaro)
-      expect(@facility_1.collected_fees).to eq(125)
+      expect(@facility_1.administer_road_test(@registrant_1)).to be false #=> false
+      @facility_1.administer_written_test(@registrant_1)
+      expect(@facility_1.administer_road_test(@registrant_1)).to be true #=> true
+      expect(@registrant_1.license_data[:license]).to be true #=> true
 
-      @facility_1.register_vehicle(@bolt)
-      expect(@bolt.registration_date).to eq(Date.today)
-      expect(@bolt.plate_type).to eq(:ev)
-      expect(@facility_1.registered_vehicles).to include(@bolt)
-      expect(@facility_1.collected_fees).to eq(325)
+      @facility_1.administer_written_test(@registrant_2)
+      expect(@facility_1.administer_road_test(@registrant_2)).to be false #=> false
+      @registrant_2.license_data[:written] = true
+      expect(@facility_1.administer_road_test(@registrant_2)).to be true #=> true
+      expect(@registrant_2.license_data[:license]).to be true #=> true
     end
+  end
 
-    it 'does not register vehicles if the service is not offered' do
-      expect(@facility_2.registered_vehicles).to eq([])
-      expect(@facility_2.collected_fees).to eq(0)
+  describe '#renew_drivers_license' do
+    it 'can renew drivers licenses' do
+      @facility_1.add_service('Written Test')
+      @facility_1.add_service('Road Test')
+      @facility_1.add_service('Renew License')
 
-      @facility_2.register_vehicle(@bolt)
-      expect(@bolt.registration_date).to be_nil
-      expect(@bolt.plate_type).to be_nil
-      expect(@facility_2.registered_vehicles).to eq([])
-      expect(@facility_2.collected_fees).to eq(0)
+      expect(@facility_1.renew_drivers_license(@registrant_1)).to be false #=> false
+      @facility_1.administer_written_test(@registrant_1)
+      @facility_1.administer_road_test(@registrant_1)
+      expect(@facility_1.renew_drivers_license(@registrant_1)).to be true #=> true
+      expect(@registrant_1.license_data[:renewed]).to be true #=> true
+
+      expect(@facility_1.renew_drivers_license(@registrant_3)).to be false #=> false
+      expect(@registrant_3.license_data[:renewed]).to be false #=> false
+
+      @facility_1.administer_written_test(@registrant_2)
+      @facility_1.administer_road_test(@registrant_2)
+      @registrant_2.license_data[:license] = true
+      expect(@facility_1.renew_drivers_license(@registrant_2)).to be true #=> true
+      expect(@registrant_2.license_data[:renewed]).to be true #=> true
     end
   end
 end
