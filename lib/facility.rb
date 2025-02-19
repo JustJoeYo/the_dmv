@@ -17,7 +17,7 @@ class Facility
   end
 
   def register_vehicle(vehicle)
-    return unless @services.include?('Vehicle Registration') # better than an if statement cause less work
+    return unless @services.include?('Vehicle Registration')
 
     vehicle.registration_date = Date.today
     case vehicle.year
@@ -45,7 +45,7 @@ class Facility
   def administer_road_test(registrant)
     return false unless @services.include?('Road Test')
     return false unless registrant.license_data[:written]
-  
+
     registrant.license_data[:license] = true
     true
   end
@@ -53,7 +53,7 @@ class Facility
   def renew_drivers_license(registrant)
     return false unless @services.include?('Renew License')
     return false unless registrant.license_data[:license]
-  
+
     registrant.license_data[:renewed] = true
     true
   end

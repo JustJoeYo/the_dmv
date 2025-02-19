@@ -5,7 +5,7 @@ RSpec.describe DmvDataService do
     @dds = DmvDataService.new
   end
   describe '#initialize' do
-    it 'can initialize' do
+    it 'initializes' do
       expect(@dds).to be_an_instance_of(DmvDataService)
     end
   end
