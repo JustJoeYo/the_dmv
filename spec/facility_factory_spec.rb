@@ -1,6 +1,4 @@
 require 'spec_helper'
-require './lib/facility_factory'
-require './lib/dmv_data_service'
 
 RSpec.describe FacilityFactory do
   before(:each) do
